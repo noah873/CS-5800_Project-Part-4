@@ -1,0 +1,160 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide stereotypes
+
+
+  interface ApplicationFacade {
+    +createOrSetCurrentUser(name: String)
+    +getCurrentUser(): User
+    +addTask(label: String)
+    +removeTask(label: String)
+    +updateTask(label: String, newColumn: String)
+    +listTasks(): ArrayList<Task>
+    +setWorkDurationSeconds(seconds: int)
+    +setBreakDurationSeconds(seconds: int)
+    +startTimer()
+    +pauseTimer()
+    +stopTimer()
+    +getTimerState(): PomodoroTimerState
+    +isWorkPhase(): boolean
+    +getSecondsRemaining(): int
+    +getWorkDurationSeconds(): int
+    +getBreakDurationSeconds(): int
+    +exportData(path: String): boolean
+    +importData(path: String): boolean
+    +startEyeStrainReminder()
+    +stopEyeStrainReminder()
+    +checkAndConsumeEyeNotice(): boolean
+    +getAppTitle(): String
+  }
+
+  class SimpleApplicationFacade {
+    -board: KanbanBoard
+    -timer: PomodoroTimer
+    -data: Data
+    -currentUser: User
+    -eyeExec: ScheduledExecutorService
+    -eyeTask: ScheduledFuture<?>
+    -eyeNoticePending: boolean
+    +SimpleApplicationFacade()
+    +createOrSetCurrentUser(name: String)
+    +getCurrentUser(): User
+    +addTask(label: String)
+    +removeTask(label: String)
+    +updateTask(label: String, newColumn: String)
+    +listTasks(): ArrayList<Task>
+    +setWorkDurationSeconds(seconds: int)
+    +setBreakDurationSeconds(seconds: int)
+    +startTimer()
+    +pauseTimer()
+    +stopTimer()
+    +getTimerState(): PomodoroTimerState
+    +isWorkPhase(): boolean
+    +getSecondsRemaining(): int
+    +getWorkDurationSeconds(): int
+    +getBreakDurationSeconds(): int
+    +exportData(path: String): boolean
+    +importData(path: String): boolean
+    +startEyeStrainReminder()
+    +stopEyeStrainReminder()
+    +checkAndConsumeEyeNotice(): boolean
+    +getAppTitle(): String
+  }
+
+  class User {
+    -name: String
+    +User(name: String)
+    +getName(): String
+    +setName(name: String)
+  }
+
+  class Task {
+    -label: String
+    -status: String
+    +Task(label: String, status: String)
+    +getLabel(): String
+    +setLabel(label: String)
+    +getStatus(): String
+    +setStatus(status: String)
+    +toString(): String
+  }
+
+  class KanbanBoard <<singleton>> {
+    -INSTANCE: KanbanBoard {static}
+    -tasks: ArrayList<Task>
+    -KanbanBoard()
+    +getInstance(): KanbanBoard {static}
+    +setTasks(tasks: ArrayList<Task>)
+    +getTasks(): ArrayList<Task>
+    +addTask(taskLabel: String)
+    +removeTask(taskLabel: String)
+    +updateTask(taskLabel: String, newColumn: String)
+  }
+
+  ' ✅ Fixed enum alias
+  enum PomodoroTimerState as "PomodoroTimer.State" {
+    IDLE
+    RUNNING
+    PAUSED
+  }
+
+  class PomodoroTimer <<singleton>> {
+    -INSTANCE: PomodoroTimer {static}
+    -scheduler: ScheduledExecutorService
+    -ticker: ScheduledFuture<?>
+    -workDurationInSeconds: int = 1500
+    -breakDurationInSeconds: int = 300
+    -secondsRemaining: int
+    -workPhase: boolean
+    -state: PomodoroTimerState = IDLE
+    -PomodoroTimer()
+    +getInstance(): PomodoroTimer {static}
+    +getWorkDurationInSeconds(): int
+    +setWorkDurationInSeconds(time: int)
+    +getBreakDurationInSeconds(): int
+    +setBreakDurationInSeconds(time: int)
+    +startTimer()
+    +pauseTimer()
+    +stopTimer()
+    +getState(): PomodoroTimerState
+    +isWorkPhase(): boolean
+    +getSecondsRemaining(): int
+    -tick()
+  }
+
+  class Data {
+    +exportData(path: String, user: User, tasks: ArrayList<Task>, workSec: int, breakSec: int): boolean
+    +importData(path: String): DataImportResult
+    -safe(s: String): String {static}
+    -parsePositive(s: String): Integer {static}
+    -parseNonNegative(s: String, def: int): int {static}
+  }
+
+  ' ✅ Fixed alias for nested class
+  class DataImportResult as "Data.ImportResult" {
+    +user: User
+    +tasks: ArrayList<Task>
+    +workSeconds: int
+    +breakSeconds: int
+    +DataImportResult(user: User, tasks: ArrayList<Task>, workSeconds: int, breakSeconds: int)
+  }
+
+
+
+  ' Relationships
+  SimpleApplicationFacade ..|> ApplicationFacade
+  SimpleApplicationFacade --> KanbanBoard : uses (singleton)
+  SimpleApplicationFacade --> PomodoroTimer : uses (singleton)
+  SimpleApplicationFacade --> Data : uses
+  SimpleApplicationFacade --> User : manages current
+  KanbanBoard *-- Task : contains
+  Data ..> User
+  Data ..> Task
+  DataImportResult --> User
+  DataImportResult --> Task
+  PomodoroTimer ..> PomodoroTimerState
+  ApplicationFacade ..> PomodoroTimerState
+
+
+@enduml
