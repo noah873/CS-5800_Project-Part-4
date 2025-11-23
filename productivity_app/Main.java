@@ -268,7 +268,7 @@ public class Main {
         }
 
         sb.append("*Eye Health Service* State: RUNNING");
-        if (stickyEyeNotice) sb.append(" | Notification: 20-20-20 Reminder");
+        if (stickyEyeNotice) sb.append(" | Notification: Please look at something 20 feet away for 20 seconds");
         sb.append("\tSelect Option: ");
         return sb.toString();
     }
