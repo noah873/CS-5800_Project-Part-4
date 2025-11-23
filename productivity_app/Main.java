@@ -298,6 +298,7 @@ public class Main {
         while (true) {
             String s = safeReadLine(sc).trim();
             int v = Integer.parseInt(s);
+            return v;
         }
     }
 
