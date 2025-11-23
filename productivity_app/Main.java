@@ -138,14 +138,14 @@ public class Main {
             switch (c) {
                 case "1" -> {
                     stopStatusLine();
-                    int w = readInt(sc, "Work minutes (1-180): ", 1, 180);
+                    int w = readInt(sc, "Work minutes: ");
                     app.setWorkDurationSeconds(w * 60);
                     System.out.println("Work duration set.");
                     pauseForASecond();
                 }
                 case "2" -> {
                     stopStatusLine();
-                    int b = readInt(sc, "Break minutes (1-60): ", 1, 60);
+                    int b = readInt(sc, "Break minutes: ");
                     app.setBreakDurationSeconds(b * 60);
                     System.out.println("Break duration set.");
                     pauseForASecond();
@@ -268,7 +268,7 @@ public class Main {
         }
 
         sb.append("*Eye Health Service* State: RUNNING");
-        if (stickyEyeNotice) sb.append(" | Notification: Please look at something 20 feet away for 20 seconds");
+        if (stickyEyeNotice) sb.append(" | Notification: Please look at something 20 feet away for 20 seconds\t");
         sb.append("\tSelect Option: ");
         return sb.toString();
     }
@@ -293,12 +293,11 @@ public class Main {
         return COLUMNS[0];
     }
 
-    private static int readInt(Scanner sc, String prompt, int min, int max) {
+    private static int readInt(Scanner sc, String prompt) {
         System.out.print(prompt);
         while (true) {
             String s = safeReadLine(sc).trim();
             int v = Integer.parseInt(s);
-            if (v >= min && v <= max) return v;
         }
     }
 
