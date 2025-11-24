@@ -92,7 +92,6 @@ hide stereotypes
     +updateTask(taskLabel: String, newColumn: String)
   }
 
-  ' ✅ Fixed enum alias
   enum PomodoroTimerState as "PomodoroTimer.State" {
     IDLE
     RUNNING
@@ -131,7 +130,6 @@ hide stereotypes
     -parseNonNegative(s: String, def: int): int {static}
   }
 
-  ' ✅ Fixed alias for nested class
   class DataImportResult as "Data.ImportResult" {
     +user: User
     +tasks: ArrayList<Task>
@@ -140,9 +138,6 @@ hide stereotypes
     +DataImportResult(user: User, tasks: ArrayList<Task>, workSeconds: int, breakSeconds: int)
   }
 
-
-
-  ' Relationships
   SimpleApplicationFacade ..|> ApplicationFacade
   SimpleApplicationFacade --> KanbanBoard : uses (singleton)
   SimpleApplicationFacade --> PomodoroTimer : uses (singleton)
@@ -155,6 +150,5 @@ hide stereotypes
   DataImportResult --> Task
   PomodoroTimer ..> PomodoroTimerState
   ApplicationFacade ..> PomodoroTimerState
-
 
 @enduml
