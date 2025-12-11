@@ -1,35 +1,66 @@
 package productivity_app;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.util.List;
 
 public interface ApplicationFacade {
-    void createOrSetCurrentUser(String name);
-    User getCurrentUser();
+  void createOrSetCurrentUser(String name);
 
-    void addTask(String label);
-    void removeTask(String label);
-    void updateTask(String label, String newColumn);
-    ArrayList<Task> listTasks();
+  User getCurrentUser();
 
-    void setWorkDurationSeconds(int seconds);
-    void setBreakDurationSeconds(int seconds);
-    void startTimer();
-    void pauseTimer();
-    void stopTimer();
+  void addTask(String label);
 
-    PomodoroTimer.State getTimerState();
-    boolean isWorkPhase();
-    int getSecondsRemaining();
+  void removeTask(String label);
 
-    int getWorkDurationSeconds();
-    int getBreakDurationSeconds();
+  void updateTask(String label, String newColumn);
 
-    boolean exportData(String path);
-    boolean importData(String path);
+  List<Task> listTasks();
 
-    void startEyeStrainReminder();
-    void stopEyeStrainReminder();
-    boolean checkAndConsumeEyeNotice();
+  void setWorkDurationSeconds(int seconds);
 
-    String getAppTitle();
+  void setBreakDurationSeconds(int seconds);
+
+  void startTimer();
+
+  void pauseTimer();
+
+  void stopTimer();
+
+  PomodoroTimer.State getTimerState();
+
+  boolean isWorkPhase();
+
+  int getSecondsRemaining();
+
+  int getWorkDurationSeconds();
+
+  int getBreakDurationSeconds();
+
+  boolean exportData(String path);
+
+  boolean importData(String path);
+
+  void startEyeStrainReminder();
+
+  void stopEyeStrainReminder();
+
+  boolean checkAndConsumeEyeNotice();
+
+  String getAppTitle();
+
+  List<Note> listNotes();
+
+  void addNote(String title, String body);
+
+  void updateNote(int index, String newTitle, String newBody);
+
+  void removeNote(int index);
+
+  List<CalendarEvent> listEvents();
+
+  void addEvent(LocalDate date, String title);
+
+  void updateEvent(int index, LocalDate newDate, String newTitle);
+
+  void removeEvent(int index);
 }

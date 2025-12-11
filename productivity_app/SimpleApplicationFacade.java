@@ -1,137 +1,212 @@
 package productivity_app;
 
-import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class SimpleApplicationFacade implements ApplicationFacade {
+  private final KanbanBoard board = KanbanBoard.getInstance();
+  private final PomodoroTimer timer = PomodoroTimer.getInstance();
+  private final Data data = new Data();
+  private final ProductivityDomainFactory factory = new ProductivityDomainFactory();
+  private final NotesService notesService = new NotesService();
+  private final CalendarService calendarService = new CalendarService();
 
-    private final KanbanBoard board = KanbanBoard.getInstance();
-    private final PomodoroTimer timer = PomodoroTimer.getInstance();
-    private final Data data = new Data();
+  private volatile User currentUser;
 
-    private volatile User currentUser = null;
+  private final ScheduledExecutorService eyeExecutor =
+      Executors.newSingleThreadScheduledExecutor();
+  private ScheduledFuture<?> eyeTask;
+  private volatile boolean eyeNoticePending;
 
-    private ScheduledExecutorService eyeExec;
-    private ScheduledFuture<?> eyeTask;
-    private volatile boolean eyeNoticePending = false;
+  @Override
+  public void createOrSetCurrentUser(String name) {
+    currentUser = factory.createUser(name);
+  }
 
-    public SimpleApplicationFacade() {}
+  @Override
+  public User getCurrentUser() {
+    return currentUser;
+  }
 
-    @Override
-    public void createOrSetCurrentUser(String name) {
-        currentUser = new User(name.trim());
+  @Override
+  public void addTask(String label) {
+    Task task = factory.createTask(label, KanbanBoard.COLUMN_TODO);
+    board.addTask(task);
+  }
+
+  @Override
+  public void removeTask(String label) {
+    board.removeTaskByLabel(label);
+  }
+
+  @Override
+  public void updateTask(String label, String newColumn) {
+    board.updateTask(label, newColumn);
+  }
+
+  @Override
+  public List<Task> listTasks() {
+    return board.getTasks();
+  }
+
+  @Override
+  public void setWorkDurationSeconds(int seconds) {
+    timer.setWorkDurationSeconds(seconds);
+  }
+
+  @Override
+  public void setBreakDurationSeconds(int seconds) {
+    timer.setBreakDurationSeconds(seconds);
+  }
+
+  @Override
+  public void startTimer() {
+    timer.start();
+  }
+
+  @Override
+  public void pauseTimer() {
+    timer.pause();
+  }
+
+  @Override
+  public void stopTimer() {
+    timer.stop();
+  }
+
+  @Override
+  public PomodoroTimer.State getTimerState() {
+    return timer.getState();
+  }
+
+  @Override
+  public boolean isWorkPhase() {
+    return timer.isWorkPhase();
+  }
+
+  @Override
+  public int getSecondsRemaining() {
+    return timer.getSecondsRemaining();
+  }
+
+  @Override
+  public int getWorkDurationSeconds() {
+    return timer.getWorkDurationInSeconds();
+  }
+
+  @Override
+  public int getBreakDurationSeconds() {
+    return timer.getBreakDurationInSeconds();
+  }
+
+  @Override
+  public boolean exportData(String path) {
+    if (currentUser == null) {
+      return false;
     }
+    return data.exportData(
+        path,
+        currentUser,
+        board.getTasks(),
+        notesService.getNotes(),
+        calendarService.getEvents(),
+        timer.getWorkDurationInSeconds(),
+        timer.getBreakDurationInSeconds());
+  }
 
-    @Override public User getCurrentUser() {
-        return currentUser;
+  @Override
+  public boolean importData(String path) {
+    Data.ImportResult result = data.importData(path);
+    if (result == null) {
+      return false;
     }
+    currentUser = result.user;
+    board.setTasks(result.tasks);
+    notesService.setNotes(result.notes);
+    calendarService.setEvents(result.events);
+    timer.setWorkDurationSeconds(result.workSeconds);
+    timer.setBreakDurationSeconds(result.breakSeconds);
+    timer.stop();
+    return true;
+  }
 
-    @Override public void addTask(String label) {
-        board.addTask(label);
+  @Override
+  public void startEyeStrainReminder() {
+    if (eyeTask != null && !eyeTask.isDone()) {
+      return;
     }
+    eyeTask =
+        eyeExecutor.scheduleAtFixedRate(
+            () -> eyeNoticePending = true, 20, 20, TimeUnit.MINUTES);
+  }
 
-    @Override public void removeTask(String label) {
-        board.removeTask(label);
+  @Override
+  public void stopEyeStrainReminder() {
+    if (eyeTask != null) {
+      eyeTask.cancel(true);
+      eyeTask = null;
     }
+  }
 
-    @Override public void updateTask(String label, String newColumn) {
+  @Override
+  public boolean checkAndConsumeEyeNotice() {
+    boolean pending = eyeNoticePending;
+    eyeNoticePending = false;
+    return pending;
+  }
 
-        board.updateTask(label, newColumn);
+  @Override
+  public String getAppTitle() {
+    if (currentUser == null) {
+      return "Productivity App";
     }
+    return currentUser.getName() + "'s Productivity App";
+  }
 
-    @Override public ArrayList<Task> listTasks() {
-        return board.getTasks();
-    }
+  @Override
+  public List<Note> listNotes() {
+    return notesService.getNotes();
+  }
 
-    @Override public void setWorkDurationSeconds(int seconds) {
-        timer.setWorkDurationInSeconds(seconds);
-    }
+  @Override
+  public void addNote(String title, String body) {
+    Note note = factory.createNote(title, body);
+    notesService.addNote(note);
+  }
 
-    @Override public void setBreakDurationSeconds(int seconds) {
-        timer.setBreakDurationInSeconds(seconds);
-    }
+  @Override
+  public void updateNote(int index, String newTitle, String newBody) {
+    notesService.updateNote(index, newTitle, newBody);
+  }
 
-    @Override public void startTimer() {
-        timer.startTimer();
-    }
+  @Override
+  public void removeNote(int index) {
+    notesService.removeNote(index);
+  }
 
-    @Override public void pauseTimer() {
-        timer.pauseTimer();
-    }
+  @Override
+  public List<CalendarEvent> listEvents() {
+    return calendarService.getEvents();
+  }
 
-    @Override public void stopTimer() {
-        timer.stopTimer();
-    }
+  @Override
+  public void addEvent(LocalDate date, String title) {
+    CalendarEvent event = factory.createCalendarEvent(date, title);
+    calendarService.addEvent(event);
+  }
 
-    @Override public PomodoroTimer.State getTimerState() {
-        return timer.getState();
-    }
+  @Override
+  public void updateEvent(int index, LocalDate newDate, String newTitle) {
+    CalendarEvent updated = factory.createCalendarEvent(newDate, newTitle);
+    calendarService.updateEvent(index, updated);
+  }
 
-    @Override public boolean isWorkPhase() {
-        return timer.isWorkPhase();
-    }
-
-    @Override public int getSecondsRemaining() {
-        return timer.getSecondsRemaining();
-    }
-
-    @Override public int getWorkDurationSeconds() {
-        return timer.getWorkDurationInSeconds();
-    }
-
-    @Override public int getBreakDurationSeconds() {
-        return timer.getBreakDurationInSeconds();
-    }
-
-    @Override
-    public boolean exportData(String path) {
-        return data.exportData(
-                path,
-                currentUser,
-                board.getTasks(),
-                timer.getWorkDurationInSeconds(),
-                timer.getBreakDurationInSeconds()
-        );
-    }
-
-    @Override
-    public boolean importData(String path) {
-        Data.ImportResult res = data.importData(path);
-        if (res == null) return false;
-        currentUser = res.user;
-        board.setTasks(res.tasks);
-        timer.setWorkDurationInSeconds(res.workSeconds);
-        timer.setBreakDurationInSeconds(res.breakSeconds);
-        timer.stopTimer();
-        return true;
-    }
-
-    @Override
-    public void startEyeStrainReminder() {
-        if (eyeExec == null || eyeExec.isShutdown()) {
-            eyeExec = Executors.newSingleThreadScheduledExecutor();
-        }
-        if (eyeTask == null || eyeTask.isCancelled()) {
-            eyeTask = eyeExec.scheduleAtFixedRate(() -> eyeNoticePending = true, 20, 20, TimeUnit.MINUTES);
-        }
-    }
-
-    @Override
-    public void stopEyeStrainReminder() {
-        if (eyeTask != null) eyeTask.cancel(true);
-        if (eyeExec != null) eyeExec.shutdownNow();
-        eyeNoticePending = false;
-    }
-
-    @Override
-    public boolean checkAndConsumeEyeNotice() {
-        boolean wasPending = eyeNoticePending;
-        eyeNoticePending = false;
-        return wasPending;
-    }
-
-    @Override
-    public String getAppTitle() {
-        return currentUser.getName() + "'s Productivity App";
-    }
+  @Override
+  public void removeEvent(int index) {
+    calendarService.removeEvent(index);
+  }
 }
