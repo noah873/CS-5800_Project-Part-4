@@ -1,105 +1,133 @@
 package productivity_app;
 
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
-public final class PomodoroTimer {
-    public enum State { IDLE, RUNNING, PAUSED }
+public class PomodoroTimer {
+  public enum State {
+    IDLE,
+    RUNNING,
+    PAUSED
+  }
 
-    private static final PomodoroTimer INSTANCE = new PomodoroTimer();
+  private static final PomodoroTimer INSTANCE = new PomodoroTimer();
 
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private ScheduledFuture<?> ticker;
+  private final ScheduledExecutorService executor =
+      Executors.newSingleThreadScheduledExecutor();
 
-    private int workDurationInSeconds = 1500;
-    private int breakDurationInSeconds = 300;
+  private ScheduledFuture<?> ticker;
+  private State state = State.IDLE;
+  private boolean workPhase = true;
+  private int workDurationSeconds = 25 * 60;
+  private int breakDurationSeconds = 5 * 60;
+  private int secondsRemaining = 0;
 
-    private int secondsRemaining;
-    private boolean workPhase = true;
-    private volatile State state = State.IDLE;
+  private PomodoroTimer() {}
 
-    private PomodoroTimer() {}
+  public static PomodoroTimer getInstance() {
+    return INSTANCE;
+  }
 
-    public static PomodoroTimer getInstance() {
-        return INSTANCE;
+  public synchronized void setWorkDurationSeconds(int seconds) {
+    if (seconds <= 0) {
+      throw new IllegalArgumentException("Work duration must be positive");
     }
-
-    public int getWorkDurationInSeconds() {
-        return workDurationInSeconds;
+    workDurationSeconds = seconds;
+    if (state == State.IDLE && workPhase) {
+      secondsRemaining = 0;
     }
+  }
 
-    public void setWorkDurationInSeconds(int time) {
-        if (time <= 0) {
-            throw new IllegalArgumentException("Work duration must be greater than zero");
-        }
-        workDurationInSeconds = time;
-        if (state == State.IDLE && workPhase) {
-            secondsRemaining = workDurationInSeconds;
-        }
+  public synchronized void setBreakDurationSeconds(int seconds) {
+    if (seconds <= 0) {
+      throw new IllegalArgumentException("Break duration must be positive");
     }
-
-    public int getBreakDurationInSeconds() {
-        return breakDurationInSeconds;
+    breakDurationSeconds = seconds;
+    if (state == State.IDLE && !workPhase) {
+      secondsRemaining = 0;
     }
+  }
 
-    public void setBreakDurationInSeconds(int time) {
-        if (time <= 0) {
-            throw new IllegalArgumentException("Break duration must be greater than zero");
-        }
-        breakDurationInSeconds = time;
-        if (state == State.IDLE && !workPhase) {
-            secondsRemaining = breakDurationInSeconds;
-        }
+  public synchronized void start() {
+    if (state == State.RUNNING) {
+      return;
     }
-
-    public void startTimer() {
-        if (state == State.RUNNING) {
-            return;
-        } else if ((workPhase && workDurationInSeconds <= 0) || (!workPhase && breakDurationInSeconds <= 0)) {
-            return;
-        } else if (secondsRemaining <= 0) {
-            secondsRemaining = workPhase ? workDurationInSeconds : breakDurationInSeconds;
-        }
-
-        state = State.RUNNING;
-
-        if (ticker == null || ticker.isCancelled()) {
-            ticker = scheduler.scheduleAtFixedRate(this::tick, 1, 1, TimeUnit.SECONDS);
-        }
+    if (secondsRemaining <= 0) {
+      workPhase = true;
+      secondsRemaining = workDurationSeconds;
     }
+    state = State.RUNNING;
+    startTickerIfNeeded();
+  }
 
-    public void pauseTimer() {
-        if (state != State.RUNNING) return;
-        state = State.PAUSED;
+  public synchronized void pause() {
+    if (state != State.RUNNING) {
+      return;
     }
+    state = State.PAUSED;
+    stopTicker();
+  }
 
-    public void stopTimer() {
-        state = State.IDLE;
+  public synchronized void stop() {
+    state = State.IDLE;
+    workPhase = true;
+    secondsRemaining = 0;
+    stopTicker();
+  }
+
+  public synchronized State getState() {
+    return state;
+  }
+
+  public synchronized boolean isWorkPhase() {
+    return workPhase;
+  }
+
+  public synchronized int getSecondsRemaining() {
+    return secondsRemaining;
+  }
+
+  public synchronized int getWorkDurationInSeconds() {
+    return workDurationSeconds;
+  }
+
+  public synchronized int getBreakDurationInSeconds() {
+    return breakDurationSeconds;
+  }
+
+  private synchronized void startTickerIfNeeded() {
+    if (ticker != null && !ticker.isDone()) {
+      return;
+    }
+    ticker =
+        executor.scheduleAtFixedRate(
+            this::tickOneSecond, 1, 1, TimeUnit.SECONDS);
+  }
+
+  private synchronized void stopTicker() {
+    if (ticker != null) {
+      ticker.cancel(true);
+      ticker = null;
+    }
+  }
+
+  private synchronized void tickOneSecond() {
+    if (state != State.RUNNING) {
+      return;
+    }
+    if (secondsRemaining > 0) {
+      secondsRemaining--;
+    }
+    if (secondsRemaining <= 0) {
+      if (workPhase) {
+        workPhase = false;
+        secondsRemaining = breakDurationSeconds;
+      } else {
         workPhase = true;
-        secondsRemaining = workDurationInSeconds;
+        secondsRemaining = workDurationSeconds;
+      }
     }
-
-    private void tick() {
-        if (state != State.RUNNING) {
-            return;
-        }
-
-        secondsRemaining = Math.max(0, secondsRemaining - 1);
-
-        if (secondsRemaining == 0) {
-            workPhase = !workPhase;
-            secondsRemaining = workPhase ? workDurationInSeconds : breakDurationInSeconds;
-        }
-    }
-
-    public State getState() {
-        return state;
-    }
-
-    public boolean isWorkPhase() {
-        return workPhase;
-    }
-
-    public int getSecondsRemaining() {
-        return secondsRemaining;
-    }
+  }
 }
