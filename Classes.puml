@@ -1,154 +1,217 @@
 @startuml
+
 skinparam packageStyle rectangle
 skinparam classAttributeIconSize 0
 hide stereotypes
 
+interface ApplicationFacade
 
-  interface ApplicationFacade {
-    +createOrSetCurrentUser(name: String)
-    +getCurrentUser(): User
-    +addTask(label: String)
-    +removeTask(label: String)
-    +updateTask(label: String, newColumn: String)
-    +listTasks(): ArrayList<Task>
-    +setWorkDurationSeconds(seconds: int)
-    +setBreakDurationSeconds(seconds: int)
-    +startTimer()
-    +pauseTimer()
-    +stopTimer()
-    +getTimerState(): PomodoroTimerState
-    +isWorkPhase(): boolean
-    +getSecondsRemaining(): int
-    +getWorkDurationSeconds(): int
-    +getBreakDurationSeconds(): int
-    +exportData(path: String): boolean
-    +importData(path: String): boolean
-    +startEyeStrainReminder()
-    +stopEyeStrainReminder()
-    +checkAndConsumeEyeNotice(): boolean
-    +getAppTitle(): String
-  }
+class SimpleApplicationFacade
 
-  class SimpleApplicationFacade {
-    -board: KanbanBoard
-    -timer: PomodoroTimer
-    -data: Data
-    -currentUser: User
-    -eyeExec: ScheduledExecutorService
-    -eyeTask: ScheduledFuture<?>
-    -eyeNoticePending: boolean
-    +SimpleApplicationFacade()
-    +createOrSetCurrentUser(name: String)
-    +getCurrentUser(): User
-    +addTask(label: String)
-    +removeTask(label: String)
-    +updateTask(label: String, newColumn: String)
-    +listTasks(): ArrayList<Task>
-    +setWorkDurationSeconds(seconds: int)
-    +setBreakDurationSeconds(seconds: int)
-    +startTimer()
-    +pauseTimer()
-    +stopTimer()
-    +getTimerState(): PomodoroTimerState
-    +isWorkPhase(): boolean
-    +getSecondsRemaining(): int
-    +getWorkDurationSeconds(): int
-    +getBreakDurationSeconds(): int
-    +exportData(path: String): boolean
-    +importData(path: String): boolean
-    +startEyeStrainReminder()
-    +stopEyeStrainReminder()
-    +checkAndConsumeEyeNotice(): boolean
-    +getAppTitle(): String
-  }
+class User
+class Task
+class Note
+class CalendarEvent
 
-  class User {
-    -name: String
-    +User(name: String)
-    +getName(): String
-    +setName(name: String)
-  }
+class KanbanBoard
+class PomodoroTimer
+class NotesService
+class CalendarService
 
-  class Task {
-    -label: String
-    -status: String
-    +Task(label: String, status: String)
-    +getLabel(): String
-    +setLabel(label: String)
-    +getStatus(): String
-    +setStatus(status: String)
-    +toString(): String
-  }
+class Data
+class ImportResult
+class ProductivityDomainFactory
+class BasicIcsAdapter
+interface CalendarStorage
 
-  class KanbanBoard <<singleton>> {
-    -INSTANCE: KanbanBoard {static}
-    -tasks: ArrayList<Task>
-    -KanbanBoard()
-    +getInstance(): KanbanBoard {static}
-    +setTasks(tasks: ArrayList<Task>)
-    +getTasks(): ArrayList<Task>
-    +addTask(taskLabel: String)
-    +removeTask(taskLabel: String)
-    +updateTask(taskLabel: String, newColumn: String)
-  }
+interface Command
+class AddTaskCommand
+class UpdateTaskCommand
+class RemoveTaskCommand
+class AddNoteCommand
+class EditNoteCommand
+class RemoveNoteCommand
+class AddEventCommand
+class EditEventCommand
+class RemoveEventCommand
 
-  enum PomodoroTimerState as "PomodoroTimer.State" {
-    IDLE
-    RUNNING
-    PAUSED
-  }
+ApplicationFacade : +createOrSetCurrentUser(...)
+ApplicationFacade : +getCurrentUser()
+ApplicationFacade : +addTask(...)
+ApplicationFacade : +removeTask(...)
+ApplicationFacade : +updateTask(...)
+ApplicationFacade : +listTasks()
+ApplicationFacade : +setWorkDurationSeconds(...)
+ApplicationFacade : +setBreakDurationSeconds(...)
+ApplicationFacade : +startTimer()
+ApplicationFacade : +pauseTimer()
+ApplicationFacade : +stopTimer()
+ApplicationFacade : +getTimerState()
+ApplicationFacade : +isWorkPhase()
+ApplicationFacade : +getSecondsRemaining()
+ApplicationFacade : +getWorkDurationSeconds()
+ApplicationFacade : +getBreakDurationSeconds()
+ApplicationFacade : +exportData(...)
+ApplicationFacade : +importData(...)
+ApplicationFacade : +startEyeStrainReminder()
+ApplicationFacade : +stopEyeStrainReminder()
+ApplicationFacade : +checkAndConsumeEyeNotice()
+ApplicationFacade : +getAppTitle()
+ApplicationFacade : +listNotes()
+ApplicationFacade : +addNote(...)
+ApplicationFacade : +updateNote(...)
+ApplicationFacade : +removeNote(...)
+ApplicationFacade : +listEvents()
+ApplicationFacade : +addEvent(...)
+ApplicationFacade : +updateEvent(...)
+ApplicationFacade : +removeEvent(...)
 
-  class PomodoroTimer <<singleton>> {
-    -INSTANCE: PomodoroTimer {static}
-    -scheduler: ScheduledExecutorService
-    -ticker: ScheduledFuture<?>
-    -workDurationInSeconds: int = 1500
-    -breakDurationInSeconds: int = 300
-    -secondsRemaining: int
-    -workPhase: boolean
-    -state: PomodoroTimerState = IDLE
-    -PomodoroTimer()
-    +getInstance(): PomodoroTimer {static}
-    +getWorkDurationInSeconds(): int
-    +setWorkDurationInSeconds(time: int)
-    +getBreakDurationInSeconds(): int
-    +setBreakDurationInSeconds(time: int)
-    +startTimer()
-    +pauseTimer()
-    +stopTimer()
-    +getState(): PomodoroTimerState
-    +isWorkPhase(): boolean
-    +getSecondsRemaining(): int
-    -tick()
-  }
+SimpleApplicationFacade : +createOrSetCurrentUser(...)
+SimpleApplicationFacade : +listTasks()
+SimpleApplicationFacade : +listNotes()
+SimpleApplicationFacade : +listEvents()
+SimpleApplicationFacade : +exportData(...)
+SimpleApplicationFacade : +importData(...)
 
-  class Data {
-    +exportData(path: String, user: User, tasks: ArrayList<Task>, workSec: int, breakSec: int): boolean
-    +importData(path: String): DataImportResult
-    -safe(s: String): String {static}
-    -parsePositive(s: String): Integer {static}
-    -parseNonNegative(s: String, def: int): int {static}
-  }
+User : -name
+User : +User(name)
+User : +getName()
+User : +setName(...)
 
-  class DataImportResult as "Data.ImportResult" {
-    +user: User
-    +tasks: ArrayList<Task>
-    +workSeconds: int
-    +breakSeconds: int
-    +DataImportResult(user: User, tasks: ArrayList<Task>, workSeconds: int, breakSeconds: int)
-  }
+Task : -label
+Task : -column
+Task : +Task(label, column)
+Task : +getLabel()
+Task : +getColumn()
+Task : +setLabel(...)
+Task : +setColumn(...)
 
-  SimpleApplicationFacade ..|> ApplicationFacade
-  SimpleApplicationFacade --> KanbanBoard : uses (singleton)
-  SimpleApplicationFacade --> PomodoroTimer : uses (singleton)
-  SimpleApplicationFacade --> Data : uses
-  SimpleApplicationFacade --> User : manages current
-  KanbanBoard *-- Task : contains
-  Data ..> User
-  Data ..> Task
-  DataImportResult --> User
-  DataImportResult --> Task
-  PomodoroTimer ..> PomodoroTimerState
-  ApplicationFacade ..> PomodoroTimerState
+Note : -title
+Note : -body
+Note : +Note(title, body)
+Note : +getTitle()
+Note : +getBody()
+Note : +setTitle(...)
+Note : +setBody(...)
+
+CalendarEvent : -date
+CalendarEvent : -title
+CalendarEvent : +CalendarEvent(date, title)
+CalendarEvent : +getDate()
+CalendarEvent : +getTitle()
+CalendarEvent : +setDate(...)
+CalendarEvent : +setTitle(...)
+CalendarEvent : +compareTo(...)
+
+KanbanBoard : -(singleton instance)
+KanbanBoard : +getInstance()
+KanbanBoard : +addTask(...)
+KanbanBoard : +removeTaskByLabel(...)
+KanbanBoard : +updateTask(...)
+KanbanBoard : +getTasks()
+KanbanBoard : +setTasks(...)
+
+PomodoroTimer : -(singleton instance)
+PomodoroTimer : +getInstance()
+PomodoroTimer : +setWorkDurationSeconds(...)
+PomodoroTimer : +setBreakDurationSeconds(...)
+PomodoroTimer : +start()
+PomodoroTimer : +pause()
+PomodoroTimer : +stop()
+PomodoroTimer : +getState()
+PomodoroTimer : +isWorkPhase()
+PomodoroTimer : +getSecondsRemaining()
+PomodoroTimer : +getWorkDurationInSeconds()
+PomodoroTimer : +getBreakDurationInSeconds()
+
+NotesService : +getNotes()
+NotesService : +addNote(...)
+NotesService : +updateNote(...)
+NotesService : +removeNote(...)
+NotesService : +setNotes(...)
+
+CalendarService : +getEvents()
+CalendarService : +addEvent(...)
+CalendarService : +updateEvent(...)
+CalendarService : +removeEvent(...)
+CalendarService : +setEvents(...)
+
+Data : +exportData(path, user, tasks, notes, events, workSeconds, breakSeconds)
+Data : +importData(path)
+ImportResult : +user
+ImportResult : +tasks
+ImportResult : +notes
+ImportResult : +events
+ImportResult : +workSeconds
+ImportResult : +breakSeconds
+
+ProductivityDomainFactory : +createUser(...)
+ProductivityDomainFactory : +createTask(...)
+ProductivityDomainFactory : +createNote(...)
+ProductivityDomainFactory : +createCalendarEvent(...)
+
+CalendarStorage : +formatEvents(...)
+CalendarStorage : +parseEvents(...)
+BasicIcsAdapter : +formatEvents(...)
+BasicIcsAdapter : +parseEvents(...)
+
+Command : +execute()
+AddTaskCommand : +execute()
+UpdateTaskCommand : +execute()
+RemoveTaskCommand : +execute()
+AddNoteCommand : +execute()
+EditNoteCommand : +execute()
+RemoveNoteCommand : +execute()
+AddEventCommand : +execute()
+EditEventCommand : +execute()
+RemoveEventCommand : +execute()
+
+ApplicationFacade <|.. SimpleApplicationFacade
+
+SimpleApplicationFacade --> KanbanBoard
+SimpleApplicationFacade --> PomodoroTimer
+SimpleApplicationFacade --> Data
+SimpleApplicationFacade --> ProductivityDomainFactory
+SimpleApplicationFacade --> NotesService
+SimpleApplicationFacade --> CalendarService
+SimpleApplicationFacade --> User
+
+KanbanBoard --> Task
+NotesService --> Note
+CalendarService --> CalendarEvent
+
+Data --> User
+Data --> Task
+Data --> Note
+Data --> CalendarEvent
+Data --> CalendarStorage
+Data --> ImportResult
+
+ProductivityDomainFactory --> User
+ProductivityDomainFactory --> Task
+ProductivityDomainFactory --> Note
+ProductivityDomainFactory --> CalendarEvent
+
+BasicIcsAdapter ..|> CalendarStorage
+
+Command <|.. AddTaskCommand
+Command <|.. UpdateTaskCommand
+Command <|.. RemoveTaskCommand
+Command <|.. AddNoteCommand
+Command <|.. EditNoteCommand
+Command <|.. RemoveNoteCommand
+Command <|.. AddEventCommand
+Command <|.. EditEventCommand
+Command <|.. RemoveEventCommand
+
+AddTaskCommand --> ApplicationFacade
+UpdateTaskCommand --> ApplicationFacade
+RemoveTaskCommand --> ApplicationFacade
+AddNoteCommand --> ApplicationFacade
+EditNoteCommand --> ApplicationFacade
+RemoveNoteCommand --> ApplicationFacade
+AddEventCommand --> ApplicationFacade
+EditEventCommand --> ApplicationFacade
+RemoveEventCommand --> ApplicationFacade
 
 @enduml
