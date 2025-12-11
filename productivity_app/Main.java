@@ -71,7 +71,6 @@ public class Main {
           System.exit(0);
           break;
         default:
-          pauseForASecond();
           break;
       }
     }
@@ -137,7 +136,6 @@ public class Main {
           back = true;
           break;
         default:
-          pauseForASecond();
           break;
       }
     }
@@ -204,7 +202,6 @@ public class Main {
           back = true;
           break;
         default:
-          pauseForASecond();
           break;
       }
     }
@@ -247,7 +244,6 @@ public class Main {
           back = true;
           break;
         default:
-          pauseForASecond();
           break;
       }
     }
@@ -351,7 +347,6 @@ public class Main {
           back = true;
           break;
         default:
-          pauseForASecond();
           break;
       }
     }
@@ -418,7 +413,6 @@ public class Main {
           back = true;
           break;
         default:
-          pauseForASecond();
           break;
       }
     }
@@ -519,7 +513,6 @@ public class Main {
           back = true;
           break;
         default:
-          pauseForASecond();
           break;
       }
     }
