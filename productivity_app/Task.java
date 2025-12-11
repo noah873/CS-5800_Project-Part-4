@@ -1,42 +1,37 @@
 package productivity_app;
 
 public class Task {
-    private String label;
-    private String status;
+  private String label;
+  private String column;
 
-    public Task(String label, String status) {
-        setLabel(label);
-        setStatus(status);
-    }
+  public Task(String label, String column) {
+    setLabel(label);
+    setColumn(column);
+  }
 
-    public String getLabel() {
-        return label;
-    }
+  public String getLabel() {
+    return label;
+  }
 
-    public void setLabel(String label) {
-        if (label == null) {
-            throw new NullPointerException("Label cannot be null");
-        } else if (label.isEmpty()) {
-            throw new IllegalArgumentException("Label cannot be empty");
-        }
-        this.label = label;
+  public void setLabel(String label) {
+    if (label == null) {
+      throw new NullPointerException("Label cannot be null");
     }
+    String trimmed = label.trim();
+    if (trimmed.isEmpty()) {
+      throw new IllegalArgumentException("Label cannot be empty");
+    }
+    this.label = trimmed;
+  }
 
-    public String getStatus() {
-        return status;
-    }
+  public String getColumn() {
+    return column;
+  }
 
-    public void setStatus(String status) {
-        if (status == null) {
-            throw new NullPointerException("Status cannot be null");
-        } else if (status.isEmpty()) {
-            throw new IllegalArgumentException("Status cannot be empty");
-        }
-        this.status = status;
+  public void setColumn(String column) {
+    if (column == null) {
+      throw new NullPointerException("Column cannot be null");
     }
-
-    @Override
-    public String toString() {
-        return "[" + status + "] " + label;
-    }
+    this.column = column;
+  }
 }

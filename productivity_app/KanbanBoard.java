@@ -1,62 +1,59 @@
 package productivity_app;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public final class KanbanBoard {
-    private static final KanbanBoard INSTANCE = new KanbanBoard();
-    private final ArrayList<Task> tasks = new ArrayList<>();
+public class KanbanBoard {
+  public static final String COLUMN_TODO = "To-Do";
+  public static final String COLUMN_DOING = "Doing";
+  public static final String COLUMN_DONE = "Done";
 
-    private KanbanBoard() {}
+  private static final KanbanBoard INSTANCE = new KanbanBoard();
 
-    public static KanbanBoard getInstance() {
-        return INSTANCE;
+  private final List<Task> tasks = new ArrayList<>();
+
+  private KanbanBoard() {}
+
+  public static KanbanBoard getInstance() {
+    return INSTANCE;
+  }
+
+  public synchronized void addTask(Task task) {
+    if (task == null) {
+      throw new NullPointerException("Task cannot be null");
     }
+    tasks.add(task);
+  }
 
-    public void setTasks(ArrayList<Task> tasks) {
-        if (tasks == null) {
-            throw new NullPointerException("Tasks cannot be null");
-        }
-        this.tasks.clear();
-        this.tasks.addAll(tasks);
+  public synchronized void removeTaskByLabel(String label) {
+    if (label == null) {
+      return;
     }
+    tasks.removeIf(task -> task.getLabel().equalsIgnoreCase(label.trim()));
+  }
 
-    public ArrayList<Task> getTasks() {
-        return new ArrayList<>(tasks);
+  public synchronized void updateTask(String label, String newColumn) {
+    if (label == null || newColumn == null) {
+      return;
     }
+    String trimmed = label.trim();
+    for (Task task : tasks) {
+      if (task.getLabel().equalsIgnoreCase(trimmed)) {
+        task.setColumn(newColumn);
+        return;
+      }
+    }
+  }
 
-    public void addTask(String taskLabel) {
-        if (taskLabel == null) {
-            throw new NullPointerException("Task Label cannot be null");
-        } else if (taskLabel.isEmpty()) {
-            throw new IllegalArgumentException("Task Label cannot be empty");
-        }
-        tasks.add(new Task(taskLabel.trim(), "To-Do"));
-    }
+  public synchronized List<Task> getTasks() {
+    return Collections.unmodifiableList(new ArrayList<>(tasks));
+  }
 
-    public void removeTask(String taskLabel) {
-        if (taskLabel == null) {
-            throw new NullPointerException("Task Label cannot be null");
-        }  else if (taskLabel.isEmpty()) {
-            throw new IllegalArgumentException("Task Label cannot be empty");
-        }
-        tasks.removeIf(t -> t.getLabel().equals(taskLabel));
+  public synchronized void setTasks(List<Task> newTasks) {
+    tasks.clear();
+    if (newTasks != null) {
+      tasks.addAll(newTasks);
     }
-
-    public void updateTask(String taskLabel, String newColumn) {
-        if (taskLabel == null) {
-            throw new NullPointerException("Task Label cannot be null");
-        } else if (taskLabel.isEmpty()) {
-            throw new IllegalArgumentException("Task Label cannot be empty");
-        } else if (newColumn == null) {
-            throw new NullPointerException("New column cannot be null");
-        } else if (newColumn.isEmpty()) {
-            throw new IllegalArgumentException("New column cannot be empty");
-        }
-        for (Task t : tasks) {
-            if (t.getLabel().equals(taskLabel)) {
-                t.setStatus(newColumn);
-                break;
-            }
-        }
-    }
+  }
 }
