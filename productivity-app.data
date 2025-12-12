@@ -1,8 +1,19 @@
 #Productivity App Export
-#Sun Nov 23 23:57:41 PST 2025
-task.0.label=CS 5800 - Project Part 4
-task.0.status=Doing
+#Thu Dec 11 20:39:58 PST 2025
+note.0.body=Facade, Adapter, Factory, Singleton, and Command
+note.0.title=Startup Design Patterns
+notes.count=1
+task.0.column=To-Do
+task.0.label=5800 Final
 tasks.count=1
 timer.breakSeconds=60
 timer.workSeconds=60
 user.name=Noah
+
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20251212
+SUMMARY:CS 5300 Final
+END:VEVENT
+END:VCALENDAR
